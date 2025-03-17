@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FBSPAMSHARE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#FF2C55',
+                        secondary: '#121212',
+                        success: '#00BA88',
+                        warning: '#FFB800',
+                    },
+                    dark: {
+                        bg: '#121212',
+                        text: '#F9FAFB',
+                        secondary: '#262626',
+                    }
+                },
+            },
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #E5E7EB;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-value {
+            height: 100%;
+            background: #FF2C55;
+            transition: width 0.3s ease;
+        }
+
+        .nav-indicator {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .session-card {
+            transition: all 0.3s ease;
+        }
+
+        .session-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+
+        .ripple:active:after {
+            transform: scale(0, 0);
+            opacity: .3;
+            transition: 0s;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #FF2C55;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff1641;
+        }
+
+        .dark body {
+            background-color: #121212;
+            color: #F9FAFB;
+        }
+
+        .dark .bg-white {
+            background-color: #262626;
+        }
+
+        .dark .border {
+            border-color: #3f3f3f;
+        }
+
+        .dark .text-gray-500 {
+            color: #a3a3a3;
+        }
+
+        .dark .text-gray-600 {
+            color: #d4d4d4;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #3f3f3f;
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: #333;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-dark-bg dark:text-dark-text">
+    <div class="max-w-md mx-auto min-h-screen pb-16 bg-white dark:bg-dark-secondary shadow-lg">
+        <header class="p-4 border-b bg-white dark:bg-dark-secondary dark:border-gray-700 sticky top-0 z-10 backdrop-blur-lg bg-white/90 dark:bg-dark-secondary/90">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-semibold">FBSPAMSHARE</h1>
+                <div class="flex items-center gap-2">
+                    <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors" id="themeToggle">
+                        <i data-lucide="moon" class="w-5 h-5"></i>
+                    </button>
+                    <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-sections">
+            <section id="home-section" class="content-section active">
+                <div class="p-4">
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white dark:bg-dark-secondary p-4 rounded-xl border hover:border-primary transition-colors">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="activity" class="w-4 h-4 text-primary"></i>
+                                <div class="text-xs text-gray-500 dark:text-gray-300">Active</div>
+                            </div>
+                            <div class="text-2xl font-semibold" id="activeSessions">0</div>
+                        </div>
+                        <div class="bg-white dark:bg-dark-secondary p-4 rounded-xl border hover:border-primary transition-colors">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="share" class="w-4 h-4 text-primary"></i>
+                                <div class="text-xs text-gray-500 dark:text-gray-300">Shares</div>
+                            </div>
+                            <div class="text-2xl font-semibold" id="totalShares">0</div>
+                        </div>
+                        <div class="bg-white dark:bg-dark-secondary p-4 rounded-xl border hover:border-primary transition-colors">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="clock" class="w-4 h-4 text-primary"></i>
+                                <div class="text-xs text-gray-500 dark:text-gray-300">Time</div>
+                            </div>
+                            <div class="text-2xl font-semibold" id="totalTime">0m</div>
+                        </div>
+                    </div>
+
+                    <form id="shareForm" class="mb-6 space-y-4">
+                        <div class="relative">
+                            <label class="text-sm text-gray-600 dark:text-gray-200 mb-1 block flex items-center gap-2">
+                                <i data-lucide="cookie" class="w-4 h-4"></i>
+                                Facebook Cookies
+                            </label>
+                            <textarea name="cookie" class="w-full p-3 rounded-lg border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows="3" placeholder="Paste your cookies here"></textarea>
+                        </div>
+                        <div class="relative">
+                            <label class="text-sm text-gray-600 dark:text-gray-200 mb-1 block flex items-center gap-2">
+                                <i data-lucide="link" class="w-4 h-4"></i>
+                                Post URL
+                            </label>
+                            <input type="url" name="url" class="w-full p-3 rounded-lg border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="https://facebook.com/...">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="relative">
+                                <label class="text-sm text-gray-600 dark:text-gray-200 mb-1 block flex items-center gap-2">
+                                    <i data-lucide="hash" class="w-4 h-4"></i>
+                                    Amount
+                                </label>
+                                <input type="number" name="amount" class="w-full p-3 rounded-lg border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="100">
+                            </div>
+                            <div class="relative">
+                                <label class="text-sm text-gray-600 dark:text-gray-200 mb-1 block flex items-center gap-2">
+                                    <i data-lucide="timer" class="w-4 h-4"></i>
+                                    Interval (s)
+                                </label>
+                                <input type="number" name="interval" class="w-full p-3 rounded-lg border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="5">
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <label class="text-sm text-gray-600 dark:text-gray-200 mb-1 block flex items-center gap-2">
+                                <i data-lucide="server" class="w-4 h-4"></i>
+                                Server
+                            </label>
+                            <select id="server" name="server" class="w-full p-3 rounded-lg border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="server1">Server 1</option>
+                                <option value="server2">Server 2</option>
+
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors ripple flex items-center justify-center gap-2">
+                            <i data-lucide="play" class="w-5 h-5"></i>
+                            Start Sharing
+                        </button>
+                    </form>
+
+                    <div id="sessions" class="space-y-4"></div>
+                </div>
+            </section>
+
+            <section id="sessions-section" class="content-section">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="layout-list" class="w-5 h-5 text-primary"></i>
+                            <h2 class="text-lg font-semibold">All Sessions</h2>
+                        </div>
+                        <span class="text-sm bg-primary/10 text-primary px-2 py-1 rounded-full" id="totalSessionsCount">0 sessions</span>
+                    </div>
+                    <div id="allSessions" class="space-y-4"></div>
+                </div>
+            </section>
+
+            <section id="changelog-section" class="content-section">
+                <div class="p-4">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="git-branch" class="w-5 h-5 text-primary"></i>
+                        <h2 class="text-lg font-semibold">Changelog</h2>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="border-l-2 border-primary pl-4 pb-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-sm font-medium">v1.1.0</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-300">- November 20, 2024</span>
+                            </div>
+                            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                                <li class="flex items-center gap-2">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-success"></i>
+                                    Enhanced UI with modern design
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-success"></i>
+                                    Improved mobile responsiveness
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-success"></i>
+                                    Added dark mode support
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="border-l-2 border-gray-200 dark:border-gray-700 pl-4 pb-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full text-sm font-medium">v1.0.0</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-300">- November 15, 2024</span>
+                            </div>
+                            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                                <li class="flex items-center gap-2">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-gray-400"></i>
+                                    Initial release
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-secondary border-t dark:border-gray-700 max-w-md mx-auto backdrop-blur-lg bg-white/90 dark:bg-dark-secondary/90">
+            <div class="relative">
+                <div class="flex justify-around items-center px-6 py-2">
+                    <a href="#" data-section="home" class="nav-item flex flex-col items-center text-primary relative p-2">
+                        <i data-lucide="home" class="w-6 h-6"></i>
+                        <span class="text-xs mt-1">Home</span>
+                    </a>
+                    <a href="#" data-section="sessions" class="nav-item flex flex-col items-center text-gray-400 dark:text-gray-300 relative p-2">
+                        <i data-lucide="activity" class="w-6 h-6"></i>
+                        <span class="text-xs mt-1">Sessions</span>
+                    </a>
+                    <a href="#" data-section="changelog" class="nav-item flex flex-col items-center text-gray-400 dark:text-gray-300 relative p-2">
+                        <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                        <span class="text-xs mt-1">Changelog</span>
+                    </a>
+                </div>
+                <div class="nav-indicator absolute bottom-0 left-0 h-0.5 bg-primary transition-transform duration-300" style="width: 33.33%"></div>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        const serverUrls = {
+            server1: '',
+            server2: '',
+        };
+
+        async function checkServerStatus() {
+            const servers = document.querySelectorAll('#server option');
+            let allDown = true;
+
+            for (const server of servers) {
+                try {
+                    const response = await fetch(serverUrls[server.value]);
+                    if (response.ok) {
+                        server.textContent = `${server.textContent} (active)`;
+                        server.classList.add('text-success');
+                        server.classList.remove('text-gray-500');
+                        allDown = false;
+                    } else {
+                        server.textContent = `${server.textContent} (down)`;
+                        server.classList.add('text-gray-500');
+                        server.classList.remove('text-success');
+                    }
+                } catch {
+                    server.textContent = `${server.textContent} (down)`;
+                    server.classList.add('text-gray-500');
+                    server.classList.remove('text-success');
+
+                }
+            }
+
+            if (allDown) {
+                alert('All servers are currently down. Please try again later.');
+            }
+        }
+
+        window.addEventListener('load', checkServerStatus);
+
+
+        const navItems = document.querySelectorAll('.nav-item');
+        const sections = document.querySelectorAll('.content-section');
+        const navIndicator = document.querySelector('.nav-indicator');
+
+        navItems.forEach((item, index) => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = item.dataset.section;
+
+                navItems.forEach(navItem => {
+                    navItem.classList.remove('text-primary');
+                    navItem.classList.add('text-gray-400');
+                });
+                item.classList.remove('text-gray-400');
+                item.classList.add('text-primary');
+
+                navIndicator.style.transform = `translateX(${index * 100}%)`;
+
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === `${sectionId}-section`) {
+                        section.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+        function setDarkMode(darkMode) {
+            if (darkMode) {
+                document.documentElement.classList.add('dark');
+                themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        }
+
+        setDarkMode(isDarkMode);
+
+
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('darkMode', isDarkMode);
+            setDarkMode(isDarkMode);
+        });
+
+        document.getElementById('shareForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalContent = submitButton.innerHTML;
+
+            try {
+                submitButton.innerHTML = `
+                    <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+                    Processing...
+                `;
+                lucide.createIcons();
+
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+
+                const selectedServer = document.getElementById('server').value;
+                data.server = selectedServer;
+
+
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to start sharing');
+                }
+
+                e.target.reset();
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                submitButton.innerHTML = originalContent;
+                lucide.createIcons();
+            }
+        });
+
+        async function updateSessions() {
+            try {
+                const response = await fetch('/total');
+                const sessions = await response.json();
+
+                document.getElementById('activeSessions').textContent = sessions.length;
+                document.getElementById('totalShares').textContent = sessions.reduce((acc, session) => acc + session.count, 0);
+                document.getElementById('totalSessionsCount').textContent = `${sessions.length} sessions`;
+
+                const sessionTemplate = session => `
+                    <div class="session-card p-4 bg-white dark:bg-dark-secondary rounded-lg border hover:border-primary transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <i data-lucide="share-2" class="w-4 h-4 text-primary"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-secondary">${session.session}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-300">${new Date().toLocaleTimeString()}</div>
+                                </div>
+                            </div>
+                            <div class="text-sm font-medium ${session.count >= session.target ? 'text-success' : 'text-primary'}">
+                                ${session.count}/${session.target}
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" style="width: ${(session.count / session.target) * 100}%"></div>
+                        </div>
+                        <div class="flex items-center justify-between mt-3">
+                            <div class="text-sm text-secondary truncate max-w-[200px]">${session.url}</div>
+                            <div class="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                                ${Math.round((session.count / session.target) * 100)}% Complete
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const containers = [
+                    document.getElementById('sessions'),
+                    document.getElementById('allSessions')
+                ];
+
+                containers.forEach(container => {
+                    if (container) {
+                        container.innerHTML = sessions.map(sessionTemplate).join('');
+                    }
+                });
+
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Failed to update sessions:', error);
+            }
+        }
+
+        setInterval(updateSessions, 1000);
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

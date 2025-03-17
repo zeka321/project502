@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#121212',
+                        success: '#00BA88',
+                        warning: '#FFB800',
+                    },
+                    dark: {
+                        bg: '#121212',
+                        text: '#F9FAFB',
+                        secondary: '#262626',
+                    }
+                },
+            },
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+
+        .ripple:active:after {
+            transform: scale(0, 0);
+            opacity: .3;
+            transition: 0s;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4F46E5;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4338CA;
+        }
+
+        .dark body {
+            background-color: #121212;
+            color: #F9FAFB;
+        }
+
+        .dark .bg-white {
+            background-color: #262626;
+        }
+
+        .dark .border {
+            border-color: #3f3f3f;
+        }
+
+        .dark .text-gray-500 {
+            color: #a3a3a3;
+        }
+
+        .dark .text-gray-600 {
+            color: #d4d4d4;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #3f3f3f;
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: #333;
+        }
+
+        .hello-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+            padding: 2rem;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-dark-bg dark:text-dark-text">
+    <div class="max-w-md mx-auto min-h-screen pb-16 bg-white dark:bg-dark-secondary shadow-lg">
+        <header class="p-4 border-b bg-white dark:bg-dark-secondary dark:border-gray-700 sticky top-0 z-10 backdrop-blur-lg bg-white/90 dark:bg-dark-secondary/90">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-semibold">Hello World</h1>
+                <div class="flex items-center gap-2">
+                    <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors" id="themeToggle">
+                        <i data-lucide="moon" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="hello-container">
+            <h1 class="text-4xl font-bold text-primary dark:text-white mb-4">Hello, World</h1>
+            <p class="text-gray-600 dark:text-gray-300 text-lg text-center">Oras na para kumain ng puke</p>
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-secondary border-t dark:border-gray-700 max-w-md mx-auto backdrop-blur-lg bg-white/90 dark:bg-dark-secondary/90">
+            <div class="flex justify-center items-center px-6 py-2">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Made by joshua Apostol</p>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+        function setDarkMode(darkMode) {
+            if (darkMode) {
+                document.documentElement.classList.add('dark');
+                themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        }
+
+        setDarkMode(isDarkMode);
+
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('darkMode', isDarkMode);
+            setDarkMode(isDarkMode);
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
