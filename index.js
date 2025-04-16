@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.post('/api/submit', (req, res) => {
+app.post('/api/submit', async (req, res) => { // Marked as async
   const origin = req.headers.origin;
   if (!allowedOrigin.includes(origin)) {
     return res.status(400).send('nakaw pa bugok');
@@ -31,7 +31,7 @@ app.post('/api/submit', (req, res) => {
   }
 
   try {
-    const cookies = await convertCookie(cookie);
+    const cookies = await convertCookie(cookie); // Ensure this function call is awaited
     if (!cookies) return res.status(400).json({ error: 'Invalid cookies format' });
 
     await startShareSession(cookies, url, parseInt(amount), parseInt(interval));
