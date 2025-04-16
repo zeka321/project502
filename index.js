@@ -7,7 +7,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigin = ["https://autosharee.vercel.app"];
+const allowedOrigin = ["https://autosharee.vercel.app"]; // Allowed origin
 
 app.use(cors());
 app.use(express.json());
@@ -18,12 +18,12 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.post('/api/submit', async (req, res) => { // Marked as async
+app.post('/api/submit', async (req, res) => {
   const origin = req.headers.origin;
   if (!allowedOrigin.includes(origin)) {
     return res.status(400).send('nakaw pa bugok');
   }
-  
+
   const { cookie, url, amount, interval } = req.body;
 
   if (!cookie || !url || !amount || !interval) {
@@ -31,7 +31,7 @@ app.post('/api/submit', async (req, res) => { // Marked as async
   }
 
   try {
-    const cookies = await convertCookie(cookie); // Ensure this function call is awaited
+    const cookies = await convertCookie(cookie);
     if (!cookies) return res.status(400).json({ error: 'Invalid cookies format' });
 
     await startShareSession(cookies, url, parseInt(amount), parseInt(interval));
