@@ -3,94 +3,102 @@ const axios = require('axios');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const SECRET_KEY = crypto.randomBytes(32).toString('hex');
+const DYNAMIC_KEY = crypto.randomBytes(16).toString('hex');
 
 const allowedOrigin = ["https://autosharee.vercel.app", "https://lalat.vercel.app"];
 
-app.use(cors());
+app.use(cors({ origin: (origin, callback) => {
+  if (!origin || allowedOrigin.includes(origin)) return callback(null, true);
+  callback(new Error('Blocked by CORS'));
+}}));
 app.use(express.json());
 app.use(bodyParser.json());
+app.use((req, res, next) => {
+  res.locals.hpToken = crypto.randomBytes(8).toString('hex');
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  const token = jwt.sign({ ip: req.ip, ua: req.headers['user-agent'] }, SECRET_KEY, { expiresIn: '15m' });
+  res.cookie('_secure', token, { httpOnly: true, sameSite: 'strict' }).sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.post('/api/submit', async (req, res) => {
-  const origin = req.headers.origin;
-  if (!allowedOrigin.includes(origin)) {
-    return res.status(400).send('nakaw pa bugok');
-  }
-
-  const { cookie, url, amount, interval } = req.body;
-
-  if (!cookie || !url || !amount || !interval) {
-    return res.status(400).json({ error: 'Missing required fields: cookie, url, amount, or interval' });
-  }
-
   try {
+    const token = req.cookies._secure || req.headers['x-auth-token'];
+    if (!token) return res.status(403).send('Missing security token');
+    
+    const decoded = jwt.verify(token, SECRET_KEY);
+    if (decoded.ip !== req.ip || decoded.ua !== req.headers['user-agent']) {
+      return res.status(403).send('Session hijacking detected');
+    }
+
+    if (req.body.hpField || !req.body._csrf) {
+      return res.status(400).send('Bot trap triggered');
+    }
+
+    const origin = req.headers.origin;
+    if (!allowedOrigin.includes(origin)) return res.status(400).send('Invalid origin');
+
+    const { cookie, url, amount, interval, _csrf } = req.body;
+    if (!cookie || !url || !amount || !interval || _csrf !== res.locals.hpToken) {
+      return res.status(400).json({ error: 'Invalid request data' });
+    }
+
     const cookies = await convertCookie(cookie);
-    if (!cookies) return res.status(400).json({ error: 'Invalid cookies format' });
+    if (!cookies) return res.status(400).json({ error: 'Invalid cookies' });
 
-    await startShareSession(cookies, url, parseInt(amount), parseInt(interval));
-    res.status(200).json({ status: 200, message: 'Share session started successfully.' });
+    const id = await getPostID(url);
+    const accessToken = await getAccessToken(cookies);
+    if (!id || !accessToken) return res.status(400).json({ error: 'FB data error' });
 
+    const sessionToken = crypto.randomBytes(12).toString('hex');
+    startShareSession(cookies, url, parseInt(amount), parseInt(interval), sessionToken);
+    res.status(200).json({ status: 200, token: sessionToken });
   } catch (err) {
-    res.status(500).json({ status: 500, error: err.message || 'Server Error' });
+    res.status(500).json({ status: 500, error: 'Server error' });
   }
 });
 
-async function startShareSession(cookies, url, amount, interval) {
-  const id = await getPostID(url);
-  const accessToken = await getAccessToken(cookies);
-
-  if (!id) throw new Error('Invalid URL: Post may be private or visible to friends only.');
-  if (!accessToken) throw new Error('Failed to retrieve access token. Check cookies.');
-
-  let sharedCount = 0;
+async function startShareSession(cookies, url, amount, interval, sessionToken) {
   const headers = {
-    accept: '*/*',
-    'accept-encoding': 'gzip, deflate',
-    connection: 'keep-alive',
-    cookie: cookies,
-    host: 'graph.facebook.com',
+    'accept': '*/*',
+    'cookie': cookies,
+    'x-fb-request-token': crypto.createHmac('sha256', DYNAMIC_KEY).update(sessionToken).digest('hex'),
+    'x-client-ip': crypto.randomBytes(8).toString('hex')
   };
 
+  let sharedCount = 0;
   const timer = setInterval(async () => {
     try {
       const response = await axios.post(
         `https://graph.facebook.com/me/feed?link=https://m.facebook.com/${id}&published=0&access_token=${accessToken}`,
         {}, { headers }
       );
-
-      if (response.status === 200) {
-        sharedCount++;
-      }
-
-      if (sharedCount >= amount) {
-        clearInterval(timer);
-      }
+      if (response.status === 200) sharedCount++;
+      if (sharedCount >= amount) clearInterval(timer);
     } catch (error) {
       clearInterval(timer);
     }
   }, interval * 1000);
 
-  setTimeout(() => {
-    clearInterval(timer);
-  }, amount * interval * 1000);
+  setTimeout(() => clearInterval(timer), amount * interval * 1000);
 }
 
 async function convertCookie(cookie) {
   try {
     const cookies = JSON.parse(cookie);
-    const sb = cookies.find(c => c.key === 'sb');
-    if (!sb) throw new Error('Missing "sb" cookie in appstate.');
-
+    if (!cookies.some(c => c.key === 'sb')) throw new Error();
     return cookies.map(c => `${c.key}=${c.value}`).join('; ');
   } catch {
-    throw new Error('Invalid appstate format. Make sure it\'s a valid JSON array.');
+    return null;
   }
 }
 
@@ -107,14 +115,9 @@ async function getPostID(url) {
 
 async function getAccessToken(cookie) {
   try {
-    const headers = {
-      authority: 'business.facebook.com',
-      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-      cookie,
-      referer: 'https://www.facebook.com/',
-    };
-
-    const response = await axios.get('https://business.facebook.com/content_management', { headers });
+    const response = await axios.get('https://business.facebook.com/content_management', {
+      headers: { cookie, referer: 'https://www.facebook.com/' }
+    });
     const tokenMatch = response.data.match(/"accessToken"\s*:\s*"([^"]+)"/);
     return tokenMatch ? tokenMatch[1] : null;
   } catch {
