@@ -7,7 +7,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigin = ["https://icongiverby-krisantopogi258.vercel.app", "https://lalat.vercel.app"];
+const allowedOrigin = ["https://icongiverby-krisantopogi258.vercel.app","https://lalat.vercel.app"];
 
 app.use(cors());
 app.use(express.json());
@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
 app.post('/api/submit', async (req, res) => {
   const origin = req.headers.origin;
   if (!allowedOrigin.includes(origin)) {
-    return res.status(400).send('nakaw pa bugok');
+    return res.status(400).send('tanga mo naman sabi ni kris');
   }
 
   const { cookie, url, amount, interval } = req.body;
